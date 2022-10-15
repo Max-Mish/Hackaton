@@ -1,5 +1,3 @@
-
-
 import psycopg2
 
 
@@ -25,9 +23,18 @@ def show_tables(bd_connection):
             bd_tables = []
             cursor.execute("""SELECT table_name FROM information_schema.tables
                    WHERE table_schema = 'main'""")
-            for table in cursor.fetchall():
-                bd_tables.append(table)
-            return bd_tables
+            return list(cursor.fetchall())
+    except Exception as e:
+        print(f"The error '{e}' occurred")
+
+
+def get_from_table(bd_connection, table):
+    try:
+        with bd_connection.cursor() as cursor:
+            cursor.execute("""SET search_path TO taxi, main;""")
+            cursor.execute(f"""SELECT * FROM {table}""")
+            return list(cursor.fetchall())
+
     except Exception as e:
         print(f"The error '{e}' occurred")
 
@@ -38,4 +45,5 @@ if __name__ == '__main__':
     )
     tables = show_tables(connection)
     print(tables)
+    print(get_from_table(connection, 'car_pool'))
     connection.close()
