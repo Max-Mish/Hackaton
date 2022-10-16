@@ -41,7 +41,7 @@ def download_files(destination: str):
     def mkdir_p(path):
         try:
             os.makedirs(path)
-        except OSError as exc:
+        except OSError:
             if os.path.isdir(path):
                 pass
             else:
@@ -49,6 +49,7 @@ def download_files(destination: str):
 
     download_folder('/payments', destination)
     download_folder('/waybills', destination)
+    print('Payments and Waybills successfully downloaded')
 
 
 if __name__ == '__main__':
