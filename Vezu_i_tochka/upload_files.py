@@ -7,15 +7,6 @@ import xml.etree.ElementTree as ElementTree
 def upload_payments(connection, path):
     connection.autocommit = True
 
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """CREATE TABLE fact_payments(
-                transaction_id serial PRIMARY KEY,
-                card_num bigint,
-                transaction_amt numeric(6, 2),
-                transaction_dt timestamp);"""
-        )
-
     path = ''.join((path, 'payments/'))
     for filename in glob.glob(os.path.join(path, '*.csv')):
         with open(filename, 'r') as f:
@@ -30,8 +21,18 @@ def upload_payments(connection, path):
                 transaction_amt = row[3]
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        """INSERT INTO fact_payments (card_num, transaction_amt, transaction_dt) VALUES (%s, %s, %s)""",
+                        """
+                        SELECT NOT EXISTS (SELECT * FROM fact_payments WHERE card_num = (%s) AND transaction_amt = (%s) AND transaction_dt = (%s))
+                        """,
                         (card_num, transaction_amt, transaction_dt))
+                    if cursor.fetchone()[0]:
+                        cursor.execute(
+                            """
+                            INSERT INTO fact_payments (card_num, transaction_amt, transaction_dt) VALUES (%s, %s, %s)
+                            """,
+                            (card_num, transaction_amt, transaction_dt))
+                        print(f'{filename} uploaded')
+
     time.sleep(1)
     print('Payments successfully uploaded')
 
@@ -42,14 +43,14 @@ def upload_waybills(connection, path):
     with connection.cursor() as cursor:
         cursor.execute(
             """CREATE TABLE waybills(
-                id serial PRIMARY KEY,
-                car char(9),
-                model varchar(30),
-                driver_name varchar(60),
-                driver_license char(12),
-                driver_valid_to date,
-                period_start timestamp(0),
-                period_stop timestamp(2));"""
+                            id serial PRIMARY KEY,
+                            car char(9),
+                            model varchar(30),
+                            driver_name varchar(60),
+                            driver_license char(12),
+                            driver_valid_to date,
+                            period_start timestamp(0),
+                            period_stop timestamp(2));"""
         )
 
     path = ''.join((path, 'waybills/'))
@@ -74,8 +75,4 @@ def upload_waybills(connection, path):
 
 
 if __name__ == '__main__':
-    row = '13.10.2022'
-    if len(row.split('.')) > 1:
-        lst = row.split('.')
-        row = '-'.join((lst[2], lst[1], lst[0]))
-    print(row)
+    upload_payments()
