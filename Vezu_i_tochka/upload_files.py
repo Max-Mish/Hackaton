@@ -9,11 +9,11 @@ def upload_payments(connection, path):
 
     with connection.cursor() as cursor:
         cursor.execute(
-            """CREATE TABLE payments(
-                id serial PRIMARY KEY,
-                dt timestamp,
-                card_number bigint,
-                cost numeric(6, 2));"""
+            """CREATE TABLE fact_payments(
+                transaction_id serial PRIMARY KEY,
+                card_num bigint,
+                transaction_amt numeric(6, 2),
+                transaction_dt timestamp);"""
         )
 
     path = ''.join((path, 'payments/'))
@@ -22,12 +22,16 @@ def upload_payments(connection, path):
             rows = f.readlines()
             for row in rows:
                 row = list(row.strip().split())
-                dt = ''.join((row[0], ' ', row[1]))
-                card_number = row[2]
-                cost = row[3]
+                if len(row[0].split('.')) > 1:
+                    lst = row[0].split('.')
+                    row[0] = '-'.join((lst[2], lst[1], lst[0]))
+                transaction_dt = ''.join((row[0], ' ', row[1]))
+                card_num = row[2]
+                transaction_amt = row[3]
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        """INSERT INTO payments (dt, card_number, cost) VALUES (%s, %s, %s)""", (dt, card_number, cost))
+                        """INSERT INTO fact_payments (card_num, transaction_amt, transaction_dt) VALUES (%s, %s, %s)""",
+                        (card_num, transaction_amt, transaction_dt))
     time.sleep(1)
     print('Payments successfully uploaded')
 
@@ -67,3 +71,11 @@ def upload_waybills(connection, path):
                 (car, model, driver_name, driver_license, driver_valid_to, period_start, period_stop))
     time.sleep(1)
     print('Waybills successfully uploaded')
+
+
+if __name__ == '__main__':
+    row = '13.10.2022'
+    if len(row.split('.')) > 1:
+        lst = row.split('.')
+        row = '-'.join((lst[2], lst[1], lst[0]))
+    print(row)
