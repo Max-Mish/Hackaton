@@ -5,7 +5,6 @@ import time
 
 def upload_fact_payments(bd_connection, path):
     bd_connection.autocommit = False
-
     path = ''.join((path, 'payments/'))
     for filename in glob.glob(os.path.join(path, '*.csv')):
         with open(filename, 'r') as f:
