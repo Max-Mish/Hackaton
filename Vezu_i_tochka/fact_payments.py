@@ -3,8 +3,8 @@ import os
 import time
 
 
-def upload_fact_payments(connection, path):
-    connection.autocommit = True
+def upload_fact_payments(bd_connection, path):
+    bd_connection.autocommit = False
 
     path = ''.join((path, 'payments/'))
     for filename in glob.glob(os.path.join(path, '*.csv')):
@@ -19,20 +19,29 @@ def upload_fact_payments(connection, path):
                 card_num = row[2]
                 transaction_amt = row[3]
                 try:
-                    with connection.cursor() as cursor:
+                    with bd_connection.cursor() as cursor:
                         cursor.execute(
                             """
-                            SELECT NOT EXISTS (SELECT * FROM fact_payments WHERE card_num = (%s) AND transaction_amt = (%s) AND transaction_dt = (%s))
+                            SELECT NOT EXISTS (SELECT * FROM fact_payments WHERE
+                                card_num = (%s) AND
+                                transaction_amt = (%s) AND
+                                transaction_dt = (%s)
+                                )
                             """,
                             (card_num, transaction_amt, transaction_dt))
                         if cursor.fetchone()[0]:
                             cursor.execute(
                                 """
-                                INSERT INTO fact_payments (card_num, transaction_amt, transaction_dt) VALUES (%s, %s, %s)
+                                INSERT INTO fact_payments (
+                                    card_num,
+                                    transaction_amt,
+                                    transaction_dt
+                                    )
+                                VALUES (%s, %s, %s)
                                 """,
                                 (card_num, transaction_amt, transaction_dt))
                             print(f'{filename} uploaded')
-                        connection.commit()
+                        bd_connection.commit()
                 except Exception as e:
                     print(f"The error '{e}' occurred")
 
