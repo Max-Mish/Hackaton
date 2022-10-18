@@ -3,10 +3,10 @@ import os
 import time
 
 
-def upload_fact_payments(bd_connection, path):
-    bd_connection.autocommit = False
-    path = ''.join((path, 'payments/'))
-    for filename in glob.glob(os.path.join(path, '*.csv')):
+def upload_fact_payments(connection_upload, folder_path):
+    connection_upload.autocommit = False
+    folder_path = ''.join((folder_path, 'payments/'))
+    for filename in glob.glob(os.path.join(folder_path, '*.csv')):
         with open(filename, 'r') as f:
             rows = f.readlines()
             for row in rows:
@@ -18,7 +18,7 @@ def upload_fact_payments(bd_connection, path):
                 card_num = row[2]
                 transaction_amt = row[3]
                 try:
-                    with bd_connection.cursor() as cursor:
+                    with connection_upload.cursor() as cursor:
                         cursor.execute(
                             """
                             SELECT NOT EXISTS (SELECT * FROM fact_payments WHERE
@@ -40,7 +40,7 @@ def upload_fact_payments(bd_connection, path):
                                 """,
                                 (card_num, transaction_amt, transaction_dt))
                             print(f'{filename} uploaded')
-                        bd_connection.commit()
+                        connection_upload.commit()
                 except Exception as e:
                     print(f"The error '{e}' occurred")
 

@@ -1,6 +1,3 @@
-from create_connection import create_connection
-
-
 def upload_dim_drivers(connection_download, connection_upload):
     try:
         with connection_download.cursor() as cursor:
@@ -58,18 +55,3 @@ def upload_dim_drivers(connection_download, connection_upload):
                     print('Row uploaded')
         except Exception as e:
             print(f"The error '{e}' occurred")
-
-
-if __name__ == '__main__':
-    connection_ufa = create_connection(
-        'dwh', 'dwh_ufa', 'dwh_ufa_6x167KSn', 'de-edu-db.chronosavant.ru', '5432'
-    )
-
-    connection_origin = create_connection(
-        'taxi', 'etl_tech_user', 'etl_tech_user_password', 'de-edu-db.chronosavant.ru', '5432'
-    )
-
-    upload_dim_drivers(connection_origin, connection_ufa)
-
-    connection_origin.close()
-    connection_ufa.close()

@@ -50,7 +50,3 @@ def download_files(destination: str):
     download_folder('/payments', destination)
     download_folder('/waybills', destination)
     print('Payments and Waybills successfully downloaded')
-
-
-if __name__ == '__main__':
-    download_files('c:/Users/maxim/Downloads/Hackaton/Files/')

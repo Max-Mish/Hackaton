@@ -2,13 +2,12 @@ import glob
 import os
 import time
 import xml.etree.ElementTree as ElementTree
-from create_connection import create_connection
 
 
-def upload_fact_waybills(connection_upload, path):
+def upload_fact_waybills(connection_upload, folder_path):
     connection_upload.autocommit = False
-    path = ''.join((path, 'waybills/'))
-    for filename in glob.glob(os.path.join(path, '*.xml')):
+    folder_path = ''.join((folder_path, 'waybills/'))
+    for filename in glob.glob(os.path.join(folder_path, '*.xml')):
         tree = ElementTree.parse(filename)
         root = tree.getroot()
 
@@ -91,14 +90,3 @@ def upload_fact_waybills(connection_upload, path):
             print(f"The error '{e}' occurred")
     time.sleep(1)
     print('Waybills successfully uploaded')
-
-
-if __name__ == '__main__':
-    connection_ufa = create_connection(
-        'dwh', 'dwh_ufa', 'dwh_ufa_6x167KSn', 'de-edu-db.chronosavant.ru', '5432'
-    )
-
-    path = 'c:/Users/maxim/Downloads/Hackaton/Files/'
-    upload_fact_waybills(connection_ufa, path)
-
-    connection_ufa.close()
