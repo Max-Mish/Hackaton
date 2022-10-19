@@ -1,9 +1,10 @@
 def upload_fact_rides(connection_download, connection_upload):
+    # Функция, осуществляющая импорт данных в таблицу fact_rides
     connection_upload.autocommit = False
     try:
         with connection_download.cursor() as cursor:
-            cursor.execute("""SET search_path TO taxi, main;""")
-            cursor.execute(
+            cursor.execute("""SET search_path TO taxi, main;""")  # Указываем путь к таблице
+            cursor.execute(  # Получаем данные из таблицы rides исходной БД
                 """SELECT 
                     ride_id,
                     dt, 
@@ -14,18 +15,18 @@ def upload_fact_rides(connection_download, connection_upload):
                     distance,
                     price
                     FROM main.rides""")
-            data = list(cursor.fetchall())
+            data = list(cursor.fetchall())  # Записываем их в data
 
     except Exception as e:
         print(f"The error '{e}' occurred")
 
-    for row in data:
-        row = list(row) + [None] * 6
+    for row in data:  # Обработка каждой строки данных
+        row = list(row) + [None] * 6  # Дополняем список пустыми элементами до количества столбцов в таблице
 
         try:
             with connection_upload.cursor() as cursor:
-                cursor.execute("""SET search_path TO dwh, dwh_ufa;""")
-                cursor.execute(
+                cursor.execute("""SET search_path TO dwh, dwh_ufa;""")  # Указываем путь к таблице
+                cursor.execute(  # Получаем phone_num из таблицы dim_clients (Внешний ключ)
                     """SELECT phone_num FROM dim_clients WHERE
                         phone_num = (%s) AND
                         card_num = (%s)
@@ -34,33 +35,33 @@ def upload_fact_rides(connection_download, connection_upload):
         except Exception as e:
             print(f"The error '{e}' occurred")
 
-        del row[2:4]
+        del row[2:4]  # Удаляем из строки ненужные данные
 
         try:
             with connection_download.cursor() as cursor:
-                cursor.execute("""SET search_path TO taxi, main;""")
-                cursor.execute(
+                cursor.execute("""SET search_path TO taxi, main;""")  # Указываем путь к таблице
+                cursor.execute(  # Получаем данные из таблицы movement исходной БД
                     """SELECT car_plate_num, event, dt FROM main.movement WHERE 
                         ride = (%s)
                     """, (row[0],))
                 for t in list(cursor.fetchall()):
-                    if t[0] not in row:
+                    if t[0] not in row:  # Добавляем car_plate_num в строку
                         row[8] = t[0]
-                    if t[1] == 'READY':
+                    if t[1] == 'READY':  # Добавляем ride_arrival_dt в строку
                         row[9] = t[2]
-                    elif t[1] == 'BEGIN':
+                    elif t[1] == 'BEGIN':  # Добавляем ride_start_dt в строку
                         row[10] = t[2]
-                    elif t[1] == 'END':
+                    elif t[1] == 'END':  # Добавляем ride_end_dt в строку если поездка завершена
                         row[11] = t[2]
-                    elif t[1] == 'CANCEL':
+                    elif t[1] == 'CANCEL':  # Добавляем ride_end_dt в строку если поездка отменена
                         row[11] = t[2]
         except Exception as e:
             print(f"The error '{e}' occurred")
 
         try:
             with connection_upload.cursor() as cursor:
-                cursor.execute("""SET search_path TO dwh, dwh_ufa;""")
-                cursor.execute(
+                cursor.execute("""SET search_path TO dwh, dwh_ufa;""")  # Указываем путь к таблице
+                cursor.execute(  # Получаем plate_num из таблицы dim_cars (Внешний ключ)
                     """SELECT plate_num FROM dim_cars WHERE
                         plate_num = (%s)
                     """, (row[8],))
@@ -70,8 +71,8 @@ def upload_fact_rides(connection_download, connection_upload):
 
         try:
             with connection_upload.cursor() as cursor:
-                cursor.execute("""SET search_path TO dwh, dwh_ufa;""")
-                cursor.execute(
+                cursor.execute("""SET search_path TO dwh, dwh_ufa;""")  # Указываем путь к таблице
+                cursor.execute(  # Получаем driver_pers_num из таблицы fact_waybills (Внешний ключ)
                     """SELECT driver_pers_num FROM fact_waybills WHERE
                         work_start_dt <= (%s) AND
                         work_end_dt > (%s) AND
@@ -81,11 +82,11 @@ def upload_fact_rides(connection_download, connection_upload):
         except Exception as e:
             print(f"The error '{e}' occurred")
 
-        del row[1]
+        del row[1]  # Удаляем из строки ненужные данные
 
         try:
             with connection_upload.cursor() as cursor:
-                cursor.execute(
+                cursor.execute(  # Проверка на существование строки в таблице fact_rides
                     """
                     SELECT NOT EXISTS (SELECT * FROM fact_rides WHERE
                         ride_id = (%s) AND
@@ -99,8 +100,8 @@ def upload_fact_rides(connection_download, connection_upload):
                         )
                     """,
                     (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]))
-                if cursor.fetchone()[0]:
-                    cursor.execute(
+                if cursor.fetchone()[0]:  # Если строки в таблице нет
+                    cursor.execute(  # Добавляем строку в таблицу fact_rides
                         """
                         INSERT INTO fact_rides (
                             ride_id,

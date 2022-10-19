@@ -5,6 +5,7 @@ import time
 
 
 def download_files(destination: str):
+    # Функция, осуществляющая загрузку каталогов waybills и payments в указанную папку
     ftp = ftplib.FTP_TLS('de-edu-db.chronosavant.ru')
     ftp.login('etl_tech_user', 'etl_tech_user_password')
     ftp.prot_p()

@@ -5,9 +5,10 @@ import xml.etree.ElementTree as ElementTree
 
 
 def upload_fact_waybills(connection_upload, folder_path):
+    # Функция, осуществляющая импорт данных в таблицу fact_payments
     connection_upload.autocommit = False
     folder_path = ''.join((folder_path, 'waybills/'))
-    for filename in glob.glob(os.path.join(folder_path, '*.xml')):
+    for filename in glob.glob(os.path.join(folder_path, '*.xml')):  # Обработка каждого файла из папки
         tree = ElementTree.parse(filename)
         root = tree.getroot()
 
@@ -20,7 +21,7 @@ def upload_fact_waybills(connection_upload, folder_path):
         middle_name = driver_name[2]
         driver_license_num = root[0][2].find('license').text
         driver_license_dt = root[0][2].find('validto').text
-        if len(driver_license_dt.split('.')) > 1:
+        if len(driver_license_dt.split('.')) > 1:  # Преобразование некорректной даты
             lst = driver_license_dt.split('.')
             driver_license_dt = '-'.join((lst[2], lst[1], lst[0]))
         work_start_dt = root[0][3].find('start').text
@@ -29,8 +30,8 @@ def upload_fact_waybills(connection_upload, folder_path):
 
         try:
             with connection_upload.cursor() as cursor:
-                cursor.execute("""SET search_path TO dwh, dwh_ufa;""")
-                cursor.execute(
+                cursor.execute("""SET search_path TO dwh, dwh_ufa;""")  # Указываем путь к таблице
+                cursor.execute(  # Получаем dim_pers_num из таблицы dim_drivers (Внешний ключ)
                     """SELECT * FROM dim_drivers WHERE
                         last_name = (%s) AND
                         first_name = (%s) AND
@@ -45,8 +46,8 @@ def upload_fact_waybills(connection_upload, folder_path):
 
         try:
             with connection_upload.cursor() as cursor:
-                cursor.execute("""SET search_path TO dwh, dwh_ufa;""")
-                cursor.execute(
+                cursor.execute("""SET search_path TO dwh, dwh_ufa;""")  # Указываем путь к таблице
+                cursor.execute(  # Получаем car_plate_num из таблицы dim_cars (Внешний ключ)
                     """SELECT * FROM dim_cars WHERE
                         plate_num = (%s) AND
                         model_name = (%s)
@@ -58,7 +59,7 @@ def upload_fact_waybills(connection_upload, folder_path):
 
         try:
             with connection_upload.cursor() as cursor:
-                cursor.execute(
+                cursor.execute(  # Проверка на существование строки в таблице fact_waybills
                     """
                     SELECT NOT EXISTS (SELECT * FROM fact_waybills WHERE
                         waybill_num = (%s) AND
@@ -70,8 +71,8 @@ def upload_fact_waybills(connection_upload, folder_path):
                         )
                     """,
                     (waybill_num, driver_pers_num, car_plate_num, work_start_dt, work_end_dt, issue_dt))
-                if cursor.fetchone()[0]:
-                    cursor.execute(
+                if cursor.fetchone()[0]:  # Если строки в таблице нет
+                    cursor.execute(  # Добавляем строку в таблицу fact_waybills
                         """
                         INSERT INTO fact_waybills (
                             waybill_num,
