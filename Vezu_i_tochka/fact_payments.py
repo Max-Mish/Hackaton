@@ -6,6 +6,17 @@ import time
 def upload_fact_payments(connection_upload, folder_path):
     connection_upload.autocommit = False
     folder_path = ''.join((folder_path, 'payments/'))
+
+    try:
+        with connection_upload.cursor() as cursor:
+            cursor.execute(
+                """ALTER SEQUENCE fact_payments_transaction_id_seq RESTART WITH 1;
+                    UPDATE fact_payments SET transaction_id=nextval('fact_payments_transaction_id_seq');"""
+            )
+        connection_upload.commit()
+    except Exception as e:
+        print(f"The error '{e}' occurred")
+
     for filename in glob.glob(os.path.join(folder_path, '*.csv')):
         with open(filename, 'r') as f:
             rows = f.readlines()
