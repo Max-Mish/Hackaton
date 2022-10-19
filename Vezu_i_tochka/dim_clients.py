@@ -1,4 +1,3 @@
-#Функция не работает
 from create_connection import create_connection
 
 
@@ -29,7 +28,27 @@ def upload_dim_clients(connection_download, connection_upload):
                         )
                     """,
                     (row[0], row[1], row[2]))
+
                 if cursor.fetchone()[0]:
+                    cursor.execute(
+                        """SELECT * FROM dim_clients WHERE
+                            phone_num = (%s) AND
+                            deleted_flag = (%s)
+                        """,
+                        (row[0], False))
+
+                    if cursor.fetchall():
+                        cursor.execute(
+                            """UPDATE dim_clients SET
+                                deleted_flag = (%s),
+                                end_dt = (%s)
+                                WHERE
+                                phone_num = (%s) AND
+                                deleted_flag = (%s)
+                            """,
+                            (True, row[1], row[0], False))
+                        connection_upload.commit()
+
                     cursor.execute(
                         """
                         INSERT INTO dim_clients (
