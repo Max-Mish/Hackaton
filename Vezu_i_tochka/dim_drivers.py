@@ -18,6 +18,17 @@ def upload_dim_drivers(connection_download, connection_upload):
         print(f"The error '{e}' occurred")
 
     connection_upload.autocommit = False
+
+    try:
+        with connection_upload.cursor() as cursor:
+            cursor.execute(
+                """ALTER SEQUENCE dim_drivers_personnel_num_seq RESTART WITH 1;
+                    UPDATE dim_drivers SET personnel_num=nextval('dim_drivers_personnel_num_seq');"""
+            )
+        connection_upload.commit()
+    except Exception as e:
+        print(f"The error '{e}' occurred")
+
     for row in data:
         try:
             with connection_upload.cursor() as cursor:
