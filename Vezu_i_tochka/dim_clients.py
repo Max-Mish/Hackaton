@@ -1,6 +1,3 @@
-from create_connection import create_connection
-
-
 def upload_dim_clients(connection_download, connection_upload):
     try:
         with connection_download.cursor() as cursor:
