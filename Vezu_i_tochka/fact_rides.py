@@ -95,13 +95,10 @@ def upload_fact_rides(connection_download, connection_upload):
                         price_amt = (%s) AND 
                         client_phone_num = (%s) AND
                         drivers_pers_num = (%s) AND 
-                        car_plate_num = (%s) AND 
-                        ride_arrival_dt = (%s) AND 
-                        ride_start_dt = (%s) AND 
-                        ride_end_dt = (%s)
+                        car_plate_num = (%s)
                         )
                     """,
-                    (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10]))
+                    (row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]))
                 if cursor.fetchone()[0]:
                     cursor.execute(
                         """
